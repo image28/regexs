@@ -1,2 +1,2 @@
 # regexs
-Misc usefull regular expressions for sed/grep/awk
+Misc useful regular expressions for sed/grep/awk
