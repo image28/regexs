@@ -1,0 +1,110 @@
+#!/bin/bash
+
+# defines
+cat /usr/include/sys/stat.h | grep "#define "
+# conditional defines
+cat /usr/include/sys/stat.h | grep "# define " 
+
+# all root ifdefs
+cat /usr/include/sys/stat.h | awk '/# ifdef/,/# endif/'1
+# all code inbetween ifdef
+cat /usr/include/sys/stat.h | awk '/# ifdef/,/# endif/'$1
+cat /usr/include/sys/stat.h | awk '/# ifdef/,/# endif/'
+
+# define tree
+cat /usr/include/sys/stat.h | awk '/#[ ]{0,}define/'
+
+# ifdef, define, endif tree
+grep -E "(#[ ]{0,}define|#[ ]{0,}ifdef|#[ ]{0,}endif)" /usr/include/sys/stat.h
+
+# list all includes
+grep -iE "#[ ]{0,}include" /usr/include/sys/stat.h
+
+# list all error codes in a c header file ( -P used to detect tabs )
+grep -P "^#define( |\t){1,}E.*[0-9]{1,3}" /usr/include/asm-generic/errno.h 
+
+# list all error codes in all c header files in /usr/include folder and it's subfolders
+for e in `slocate "/usr/include/*.h"`; do grep -P "^#define( |\t){1,}E.*[0-9]{1,3}" $e; done
+
+# list include tree
+grep -iE "#[ ]{0,}include" /usr/include/sys/stat.h
+
+# list full file (*not finished)
+grep -E "(#[ ]{0,}define|#[ ]{0,}ifdef|#[ ]{0,}endif|#[ ]{0,}include)" /usr/include/sys/stat.h
+
+# ifdef, define, endif, include tree
+grep -E "#[ ]{0,}(define|ifdef|ifndef|endif|include)" /usr/include/sys/stat.h
+
+grep -iE "^[ ]{0,}[struct]{6}[ ]{1}.*" /usr/include/bits/statx.h
+grep -iE "(#[ ]{0,}(define|ifndef|ifdef|endif|include|error)|^[ ]{0,}struct )" /usr/include/bits/statx.h
+
+# extract text from .msg format, could be improved
+cat Draft\ email\ cover\ letter.msg | grep -Eao "[A-Za-z0-9 \.\(\)\\\/\-]" | tr -d '\n' > ~/draft-extract
+
+# find inode/(folders/subfolders) usage in folders
+find / -xdev -printf '%h\n' | sort | uniq -c | sort -k 1 -n > ~/inode-usage.folders-`date +%j.%Y` # find inode usage in folders
+du --inodes -xS / > ~/inode-usage\(du\).folders-`date +%j.%Y` # find inode usage in folders
+
+# replace octal terminal escape coded colours with conky colours
+sed 's/\(\\\033\[3\)\(.\)\(m\)/{color fg \2}/g' # foreground color ( replace 0-7 with conky colour names )
+sed 's/\(\\\033\[4\)\(.\)\(m\)/{color bg \2}/g' # background color ( replace 0-7 with conky colour names )
+
+#Extract xml tag from line
+grep -iE "<title>.*</title>"
+
+# Make more generic ( removes need for loops in a lot of situations in bash scripts )
+SKIP=`cat Regions | head -n4 | sed -e s/"\n"/"|"/g`; # region file contains lists of citys to group into regions comma separated for citys, endline for regions ( from xero-grab.sh ) 
+cat $NAME | grep -iE "<(City|Region)>" | grep -i "$l" | grep -viE "($(exec echo $SKIP))" > /dev/null; # grep skip with | or for citys for a single region
+
+# Find variables in a Makefile
+function get-vars-from-makefile()
+{
+	IFS=$','; 
+	for i in `cat Makefile | \
+			grep "CC" | \
+			grep -Eo "\\$\\([A-Z]{1,}\\)" | \
+			sort | \
+			uniq | \
+			cut -c3- | rev | cut -c2- | rev | \
+			tr '\n' ',' | \
+			rev | cut -c2- | rev`; 
+	do 
+		echo "$i";
+	done
+}
+# match a regex and for a c header, and insert comment to front ( & symbol in sed regex used to re-print whole match ($_ for whole line) )
+cat somefile.cpp | sed -E s/"^[ ]{0,}#include.*boost"/"\\/\\/&"/
+
+# remove all non-hidden files in home directory in a misc unsorted folder ( Not working/finished )
+# attempting to find a programmatically better way than 
+# IFS=$'\n'; TOMOVE=`find . -maxdepth 1 -type f | grep -vE "^\.\/\." | cut -c3-`; for d in $TOMOVE; do mv "$d" unsorted-home-files; done
+function cleanup-home
+{
+	IFS=$' '; 
+	TOMOVE=`find . -maxdepth 1 -type f | grep -vE "^\.\/\." | cut -c3- | tail -n 10 | tr '\n' ' '`; 
+	mv -t unsorted-home-files "`echo $TOMOVE`"
+}
+
+function cleanup-closet
+{
+	echo "Closet contents"
+	ls $USEHOME/unsorted-home-files
+	echo
+
+	IMG_FORMATS="jpg jpeg png bmp pix gif tiff tif"
+	SND_FORMATS=""
+	VID_FORMATS=""
+	SHT_FORMATS="csv xml xlsl xlsb toml yaml"
+	
+}
+
+# find missing libs and check for version difference, attempt symbolic linking
+function check_for_missing_lib_version_difference
+{
+	IFS=$' '; 
+	MISSING_LIBS=`ldd anna | grep "not" | cut -c2- | grep -iEo "^[A-Z0-9\-_]*\.so" | tr '\n' ' '`; 
+	slocate $MISSING_LIBS | grep -E "^/usr/(lib|local/lib)" | rev | grep -E "^os\." | rev
+}
+
+# Searches results of results without a bash for loop
+IFS=$' '; COMP="`grep -R avx2 /usr/include | grep -Eoi "^[A-Z0-9\/\._-]*" | grep -i ".h"  | sort | uniq | tr '\n' ' ' | rev | cut -c2- |  rev`"; cat `echo -n $COMP` | grep immintrin
