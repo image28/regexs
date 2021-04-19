@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# extract quoted strings from html files
+cat index.html | grep -iEo "[\"]{1}(http(s|)://|)[a-z0-9\.\/\?\=-]{1,}[\"]{1}"
+
 # defines
 cat /usr/include/sys/stat.h | grep "#define "
 # conditional defines
