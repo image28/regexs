@@ -2,6 +2,8 @@
 
 # Find all non-multi line boxed comments
 cat *.{c,h} | grep -E "^[.]{0,}\/\*.{0,}\*\/.{0,}$"
+cat *.{c,h} | grep -Ev "^[.]{0,}/\*.{0,}\*/.{0,}$" | grep -Ev "^//"
+
 
 # extract quoted strings from html files
 cat index.html | grep -iEo "[\"]{1}(http(s|)://|)[a-z0-9\.\/\?\=-]{1,}[\"]{1}"
